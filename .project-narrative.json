@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "title": "Project Narrative",
+  "title": "SAPProxyMCPServerBuilder — Project Narrative",
   "fragments": "narrative/entries",
   "preamble": "narrative/preamble.md",
   "output": "Narrative.md",
