@@ -40,9 +40,20 @@ prompt at a time only after the previous prompt passes its acceptance checks.
 9. [Expose the narrow MCP surface securely](prompts/08-mcp-identity-and-authorization.md)
 10. [Package, document, and govern the server](prompts/09-delivery-documentation-and-audit.md)
 11. [Run an independent reconstruction audit](prompts/10-independent-reconstruction-audit.md)
+12. [Add home-lab fixed-token authentication](prompts/11-home-lab-fixed-token-authentication.md)
+13. [Use the shared home-lab Keycloak OAuth flow](prompts/12-shared-home-lab-keycloak-oauth.md)
+14. Prepare the `ai-mcp-server` development deployment with
+    [Prompt 13](prompts/13-ai-mcp-server-development-deployment.md).
+15. Apply `Prompt 13L — Add the SAP MCP deployment to LocalAI` from the separately managed LocalAI
+    repository.
+16. [Audit the `ai-mcp-server` deployment contract](prompts/14-ai-mcp-server-deployment-audit.md)
 
 Do not paste every prompt into one message. Each stage introduces one bounded capability and asks
 for executable evidence before the next begins.
+
+Prompt 13L is the one exception to the repository location: play it in LocalAI after Prompt 13 has
+merged into the server repository. It implements the host-owned deployment contract; do not copy
+the LocalAI deployment script into the server repository.
 
 Prompt 2 installs Project Narrative. Publish and merge that mechanical installation before opening
 decision-bearing pull requests for later prompts.
