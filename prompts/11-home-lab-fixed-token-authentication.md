@@ -26,10 +26,37 @@ unreachable issuer, failed JWKS retrieval or rejected JWT never tries the fixed 
 fixed-token mode a JWT is merely an opaque string: it is never parsed and never reaches the JWT
 validator.
 
+## Add a file secret source
+
+This section overrides Prompt 3. Prompt 3 established secret-provider contracts for the SAP OAuth
+client credential and the SAP client certificate, plus a fake provider for tests. It established no
+file source. Every later stage needs one, because the deployment materialises secrets as read-only
+mounted files and hands the server a path.
+
+Add one `File` source to the existing secret-provider contract, available to every secret kind the
+server accepts: the SAP OAuth client credential, the SAP client certificate and the fixed caller
+token below. It is a source inside the Prompt 3 boundary, not a second boundary, not a vendor SDK
+and not a client for any secret store.
+
+- A file-sourced secret is configured as a filesystem path and nothing else. A literal value, or
+  anything shaped like one, in the path position fails startup with a message that names the
+  setting and prints no candidate value.
+- Read each file once during startup validation, before the transport accepts a request. Rotation
+  means replacing the file and restarting; the server does not watch, poll or re-read.
+- Absent, unreadable, empty and whitespace-only files fail startup, distinctly and by setting name.
+- Trim exactly one trailing newline and nothing else. Do not trim interior or leading whitespace,
+  and do not silently accept a file whose contents differ from the intended secret by more than
+  that newline.
+- The fake provider remains test-only. Prompt 13 forbids it outside the `Fake` upstream class.
+
+No environment-variable secret source is introduced. Environment variables carry non-secret
+configuration only, including the paths above. A setting the manifest in Prompt 13 classifies as
+secret material is never satisfiable from an environment literal.
+
 ## Implement the fixed-token provider
 
-- Read the expected token through the existing file secret-provider boundary. Do not accept it from
-  an environment variable, command argument, configuration literal, repository fixture or Docker
+- Read the expected token through the `File` secret source added above. Do not accept it from an
+  environment variable, command argument, configuration literal, repository fixture or Docker
   label.
 - Fail startup when the file is absent, unreadable, empty or whitespace-only.
 - Reject an absent or malformed `Authorization` header before comparison.
@@ -65,10 +92,24 @@ Document the accepted consequences plainly:
 These consequences are accepted only for this home-lab development mode. Do not add a warning-only
 fallback, silently disable invoice posting, or pretend that the network supplies caller identity.
 
+## Do not guard mode selection by profile
+
+Selecting fixed-token mode is an explicit operator decision. Do not restrict it by deployment
+profile, upstream class, hardening check or environment name, and do not degrade it to a
+warning-only or reduced-capability path under any of them. A guard added here would be discovered
+only by an operator who already decided, and would be removed rather than obeyed.
+
+Prompt 3's rejection of a production profile that uses no SAP authentication is a different rule
+about the SAP-side credential, and it stands unchanged.
+
 ## Prove
 
 - absent, unknown, ambiguous and incomplete mode selections fail startup distinctly and without
   exposing secret material;
+- a file-sourced secret configured with a literal value rather than a path fails startup, and every
+  secret kind from Prompt 3 can be satisfied from the `File` source;
+- a secret-classified setting cannot be satisfied from an environment variable in any mode;
+- one trailing newline is trimmed and no other whitespace is;
 - composition constructs exactly one authentication branch;
 - a JWT in fixed-token mode never reaches JWT validation, and a valid fixed token in JWT mode is
   refused;
@@ -78,18 +119,23 @@ fallback, silently disable invoice posting, or pretend that the network supplies
   permission and business-policy checks allow it;
 - every decision is audited against the configured subject and tenant;
 - fixed-token 401 responses carry only the bare Bearer challenge and no metadata endpoint is
-  served; and
+  served;
+- selecting fixed-token mode succeeds under every deployment profile and grants the full configured
+  surface; and
 - Prompt 8's JWT validation and denial-before-SAP behavior remain unchanged.
 
 ## Acceptance criteria
 
 - Remote HTTP selects exactly one of two fail-closed authentication modes with no fallback.
+- A `File` secret source exists for every secret kind the server accepts, and no secret-classified
+  setting can be supplied as an environment literal.
 - Fixed-token mode reads one file-backed secret and creates one configured shared identity.
 - The shared-identity, audit, plan-scope, expiry, revocation and secret-store consequences are
   documented rather than disguised.
 - The MCP and SAP surfaces are unchanged, and automated tests contact only the fake SAP server.
 - Formatting, build, schema checks and tests succeed.
 
-Commit locally. Use `narrative-required` and record the exclusive mode choice, the shared identity
-and its consequences, and the decision to retain Prompt 8's JWT path unchanged until Prompt 12.
-Do not push unless requested.
+Commit locally. Use `narrative-required` and record the exclusive mode choice, the addition of the
+`File` secret source and why environment-sourced secrets were refused, the shared identity and its
+consequences, the deliberate absence of a profile guard on mode selection, and the decision to
+retain Prompt 8's JWT path unchanged until Prompt 12. Do not push unless requested.

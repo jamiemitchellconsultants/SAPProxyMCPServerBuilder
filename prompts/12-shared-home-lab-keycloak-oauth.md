@@ -21,6 +21,37 @@ Keep issuer and audience as reviewed configuration rather than hard-coded applic
 Locally validate signature, pinned algorithms, issuer, audience, expiry, not-before and required
 claims. Continue deriving caller and tenant only from validated claims.
 
+## Map roles to permissions by identity
+
+The realm mints one flat `roles` array. Its values are Prompt 8's permission names, exactly, with no
+transformation:
+
+- `sap.invoice.plan`
+- `sap.invoice.post`
+- `sap.invoice.payment.read`
+- `sap.invoice.schema.read`
+
+A role grants the identically named permission and nothing else. Do not introduce a prefix, suffix,
+case change, alias table, scope-to-role mapping or role hierarchy, and do not let an unrecognised
+role value grant anything. These are the same four permission names Prompt 11 configures on the
+fixed-token identity, so both modes present identically shaped input to the one deny-by-default
+authorization service.
+
+This identity is the single fact three repositories have to agree on. State it in the server's
+delivered documentation as a contract, not as an implementation detail.
+
+## Configure the accepted tenant in both modes
+
+The shared realm mints a constant `tid`. A validated token is not evidence that its tenant is one
+this deployment serves. Add one required configured accepted-tenant value:
+
+- in Keycloak mode, a token whose validated `tid` is any other value is refused after signature and
+  claim validation and before authorization; and
+- in fixed-token mode, the same setting is the static identity's tenant from Prompt 11.
+
+The setting is required in both modes. There is no default, no wildcard and no "any tenant". An
+absent value fails startup by name.
+
 Document that this is a development-lab decision: a token minted for another MCP server can pass the
 audience check here. The audience is not evidence of which server the caller intended to reach. The
 required roles and the existing business-policy checks remain the authorization boundary.
@@ -47,8 +78,9 @@ Make the advertised scope optional:
 - when absent, configuration remains complete, metadata omits `scopes_supported`, and the challenge
   omits `scope`.
 
-Do not advertise a scope that LocalAI has not created. Prompt 13L will choose the deployment value
-after inspecting the shared realm contract.
+Do not advertise a scope that the shared realm has not created, and do not choose the deployment's
+value here. Prompt 13 fixes it, because it owns the deployment contract; Prompt 13L consumes that
+value and proves the matching client scope exists as a realm default.
 
 In fixed-token mode, preserve Prompt 11 exactly: neither metadata path is served and the challenge
 is a bare Bearer challenge with no metadata or scope.
@@ -84,6 +116,11 @@ deny-by-default authorization and business-policy services.
   fixed-token mode returns the bare challenge;
 - a token carrying `homelab-mcp`, the configured issuer, tenant and required role validates, while
   missing or wrong values are refused;
+- each of the four role values grants exactly its identically named permission, an unrecognised role
+  value grants nothing, and a token carrying every role still fails the business-policy checks it
+  should fail;
+- a validated token whose `tid` is not the configured accepted tenant is refused before
+  authorization, and an absent accepted-tenant setting fails startup in both modes;
 - signature, algorithm, expiry, not-before and claim failures remain fail closed;
 - no client identifier or dynamic-registration fact grants authority;
 - both authentication modes reach the same surface and neither falls back; and
@@ -94,10 +131,14 @@ deny-by-default authorization and business-policy services.
 - A conversational agent given only the external `/mcp` URI can discover Keycloak, register itself,
   complete authorization-code with PKCE and call an authorized read-only tool.
 - Fixed-token mode remains unchanged and serves no OAuth metadata.
+- Role values and permission names are identical, documented as a cross-repository contract.
+- One accepted tenant is required configuration in both authentication modes.
 - The shared-audience and constant-claim costs are documented without weakening authorization.
 - The MCP surface and SAP credential contract are unchanged.
 - Formatting, build, schema checks and tests succeed.
 
-Commit locally. Use `narrative-required` and record the shared audience and its cost, why both
-metadata paths are served, why advertised scope is optional, and why dynamically registered client
-identity is not authorization evidence. Do not push unless requested.
+Commit locally. Use `narrative-required` and record the shared audience and its cost, the identical
+role-and-permission naming and why it is a contract rather than a coincidence, why one accepted
+tenant is required in both modes, why both metadata paths are served, why advertised scope is
+optional, and why dynamically registered client identity is not authorization evidence. Do not push
+unless requested.
