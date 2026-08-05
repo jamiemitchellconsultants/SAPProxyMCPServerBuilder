@@ -40,9 +40,28 @@ prompt at a time only after the previous prompt passes its acceptance checks.
 9. [Expose the narrow MCP surface securely](prompts/08-mcp-identity-and-authorization.md)
 10. [Package, document, and govern the server](prompts/09-delivery-documentation-and-audit.md)
 11. [Run an independent reconstruction audit](prompts/10-independent-reconstruction-audit.md)
+12. [Add home-lab fixed-token authentication](prompts/11-home-lab-fixed-token-authentication.md)
+13. [Use the shared home-lab Keycloak OAuth flow](prompts/12-shared-home-lab-keycloak-oauth.md)
+14. [Package the fake SAP upstream](prompts/12F-deployable-fake-sap-upstream.md)
+15. [Prepare the `ai-mcp-server` deployment](prompts/13-ai-mcp-server-development-deployment.md)
+16. [Add the SAP MCP deployment to LocalAI][p13l] — played in the LocalAI repository, not this one
+17. [Audit the `ai-mcp-server` deployment contract](prompts/14-ai-mcp-server-deployment-audit.md)
 
 Do not paste every prompt into one message. Each stage introduces one bounded capability and asks
 for executable evidence before the next begins.
+
+Prompts 11 to 14 deliberately override earlier rules: Prompt 11 adds the `File` secret source Prompt
+3 did not establish, Prompt 12F allows the containerised fake to bind beyond loopback, and Prompt 13
+replaces Prompt 3's plain-HTTP rule, enumerates the deployment profile Prompt 3 only alluded to, and
+opens one unauthenticated readiness path against Prompt 8's blanket rejection. Each supersession is
+stated in the prompt that makes it and audited by Prompt 14. Do not resolve a conflict between an
+earlier and a later prompt by editing the earlier one.
+
+Prompt 13L is the one exception to the repository location: play it in LocalAI after Prompt 13 has
+merged into the server repository. It implements the host-owned deployment contract; do not copy
+the LocalAI deployment script into the server repository.
+
+[p13l]: https://github.com/jamiemitchellconsultants/LocalAI/blob/main/prompts/13L-add-sap-mcp-deployment-to-localai.md
 
 Prompt 2 installs Project Narrative. Publish and merge that mechanical installation before opening
 decision-bearing pull requests for later prompts.
