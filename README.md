@@ -46,6 +46,7 @@ prompt at a time only after the previous prompt passes its acceptance checks.
 15. [Prepare the `ai-mcp-server` deployment](prompts/13-ai-mcp-server-development-deployment.md)
 16. [Add the SAP MCP deployment to LocalAI][p13l] — played in the LocalAI repository, not this one
 17. [Audit the `ai-mcp-server` deployment contract](prompts/14-ai-mcp-server-deployment-audit.md)
+18. [Record the NonProduction confirmation authority](prompts/15-home-lab-confirmation-authority.md)
 
 Do not paste every prompt into one message. Each stage introduces one bounded capability and asks
 for executable evidence before the next begins.
@@ -56,6 +57,10 @@ replaces Prompt 3's plain-HTTP rule, enumerates the deployment profile Prompt 3 
 opens one unauthenticated readiness path against Prompt 8's blanket rejection. Each supersession is
 stated in the prompt that makes it and audited by Prompt 14. Do not resolve a conflict between an
 earlier and a later prompt by editing the earlier one.
+
+Prompt 15 is documentation only: it narrows an open choice Prompt 5 already left to the deployment
+(which trusted client supplies the posting confirmation) rather than overriding a rule, is scoped to
+`NonProduction` only, and changes no code, configuration, or test.
 
 Prompt 13L is the one exception to the repository location: play it in LocalAI after Prompt 13 has
 merged into the server repository. It implements the host-owned deployment contract; do not copy
